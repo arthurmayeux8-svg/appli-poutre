@@ -1,6 +1,5 @@
 import { ReactNode } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { PointProgression } from '../core/plans';
 
 export const couleurs = {
   fond: '#F4F1EC',
@@ -13,6 +12,7 @@ export const couleurs = {
   vertDoux: '#D7EEDF',
   rouge: '#C0392B',
   bord: '#E2DDD5',
+  bleu: '#3A6EA5',
 };
 
 export function Ecran({ children }: { children: ReactNode }) {
@@ -134,27 +134,23 @@ export function JaugeForce({ valeurKg, maxKg, cibleKg }: { valeurKg: number; max
   );
 }
 
-/** Petit graphique en barres pour la progression. */
-export function GraphiqueProgression({ points, unite }: { points: PointProgression[]; unite: string }) {
-  if (points.length === 0) return <T doux>Pas encore de mesure pour ce choix.</T>;
-  const max = Math.max(...points.map((p) => p.valeur), 1);
-  const derniers = points.slice(-12);
+/** Titre de section, au-dessus d'un groupe de cartes. */
+export function Section({ children }: { children: ReactNode }) {
+  return <Text style={styles.section}>{children}</Text>;
+}
+
+/** Une petite valeur mise en avant (ex. score, durée). */
+export function Chiffre({ valeur, legende, couleur }: { valeur: string; legende: string; couleur?: string }) {
   return (
-    <View style={styles.graphique}>
-      {derniers.map((p, i) => (
-        <View key={p.date + i} style={styles.colonne}>
-          <Text style={styles.etiquette}>
-            {p.valeur.toFixed(0)}
-            {unite}
-          </Text>
-          <View style={styles.zoneBarre}>
-            <View style={[styles.barreGraph, { height: `${(p.valeur / max) * 100}%` }]} />
-          </View>
-          <Text style={styles.etiquette}>
-            {new Date(p.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' })}
-          </Text>
-        </View>
-      ))}
+    <View style={{ flex: 1, alignItems: 'center' }}>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        style={[styles.chiffre, valeur.length > 5 ? styles.chiffreTexte : null, couleur ? { color: couleur } : null]}
+      >
+        {valeur}
+      </Text>
+      <Text style={styles.texteDoux}>{legende}</Text>
     </View>
   );
 }
@@ -176,9 +172,7 @@ const styles = StyleSheet.create({
   jauge: { height: 28, borderRadius: 14, backgroundColor: couleurs.bord, overflow: 'hidden' },
   zoneCible: { position: 'absolute', top: 0, bottom: 0, backgroundColor: couleurs.vertDoux, borderLeftWidth: 2, borderRightWidth: 2, borderColor: couleurs.vert },
   barre: { position: 'absolute', left: 0, top: 6, bottom: 6, borderRadius: 8 },
-  graphique: { flexDirection: 'row', alignItems: 'flex-end', height: 180, gap: 6 },
-  colonne: { flex: 1, height: '100%', justifyContent: 'flex-end', alignItems: 'center', gap: 2 },
-  zoneBarre: { flex: 1, width: '100%', justifyContent: 'flex-end', alignItems: 'center' },
-  barreGraph: { width: '70%', backgroundColor: couleurs.accent, borderRadius: 4, minHeight: 2 },
-  etiquette: { fontSize: 10, color: couleurs.texteDoux },
+  section: { fontSize: 13, fontWeight: '700', color: couleurs.texteDoux, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 8 },
+  chiffreTexte: { fontSize: 18 },
+  chiffre: { fontSize: 28, lineHeight: 34, fontWeight: '800', color: couleurs.texte, fontVariant: ['tabular-nums'] },
 });

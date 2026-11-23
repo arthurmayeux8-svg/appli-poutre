@@ -4,18 +4,33 @@ Application mobile (Android et iPhone) de la poutre d'escalade instrumentée. El
 
 ## Ce que fait l'appli
 
-- **Connexion Bluetooth** à la planche, ou **simulateur** pour tout essayer sans matériel.
+L'appli a trois onglets en bas, et une roue dentée en haut à droite pour les paramètres.
+
+- **Accueil** : le **score de grimpe de 1 à 10** et sa courbe de progression, et un aperçu de l'**entraînement du jour**.
+- **Séance** : la séance du jour en détail (prise, placement des doigts, durées, charge visée), les **séances à venir** (une séance un jour sur deux, en alternant les plans conseillés), les dernières séances faites et les autres plans. Pendant la séance, l'appli enchaîne suspensions et repos et affiche la **zone de force à viser**, qui passe au vert.
 - **Test de force** : bras gauche, bras droit ou les deux, sur la prise de son choix.
-  - « Force max » : on tire le plus fort possible pendant 7 s (réglable).
+  - « Force max » : on tire le plus fort possible pendant 7 s (réglable). C'est ce test qui met à jour le score.
   - « Tenir le plus longtemps » : on mesure le temps de suspension.
-  - Résultat : force max, force moyenne, % du poids de corps, temps, et dissymétrie gauche/droite.
-- **Plans d'entraînement** : Découverte, Repeaters 7/3, Suspensions longues, Force max, Petites réglettes, Rééquilibrage. Pour chaque exercice : la prise à utiliser, la façon de placer les doigts, la durée, le repos et la **zone de force à viser** (affichée en vert pendant la suspension).
-- **Adaptation automatique** :
-  - le niveau est calculé à partir de la force max en % du poids de corps ;
-  - les charges visées sont recalculées après chaque test ;
-  - après chaque séance, le ressenti (trop facile / bien / trop dur) fait monter ou baisser la charge suivante ;
-  - si la dissymétrie dépasse 10 %, un plan de rééquilibrage est proposé.
-- **Profil** stocké sur le téléphone (pas de compte en ligne) : historique des tests et graphique de progression par main et par prise.
+  - L'onglet montre aussi un graphique main gauche / main droite et l'historique des tests.
+- **Paramètres** : profil (nom, poids), connexion à la planche ou au simulateur, réglages de la planche (capteurs, prises, seuil), et données (démo, tout effacer).
+
+### Le score de 1 à 10
+
+Il vient de la force max à deux mains (ou bras gauche + bras droit), en % du poids de corps, ramenée à une réglette de 20 mm :
+60 % du poids ou moins = 1, 100 % = 4, 130 % = 6,3, 160 % = 8,5, 180 % ou plus = 10.
+Débutant en dessous de 4, intermédiaire de 4 à 6,3, confirmé de 6,3 à 8,5, expert au-delà. Les valeurs sont dans `src/core/score.ts`.
+
+### L'adaptation automatique
+
+- Les plans conseillés dépendent du niveau ; un plan de rééquilibrage s'ajoute si la dissymétrie dépasse 10 %.
+- Les charges visées sont recalculées après chaque test de force.
+- Après chaque séance, le ressenti (trop facile / bien / trop dur) fait monter ou baisser la charge suivante.
+
+### Le simulateur
+
+Tant que la planche n'existe pas, le **simulateur** la remplace. Il se connecte tout seul au lancement (réglable dans les paramètres). Un grimpeur virtuel se suspend automatiquement pendant les tests et les séances : il tire environ 115 % de son poids en force max, sa main gauche est un peu plus faible, et il lâche au bout de 15 à 35 s au test « tenir le plus longtemps ». Dans les paramètres, le bouton **Maintenir pour se suspendre** le fait se suspendre à la main.
+
+Pour voir tout de suite les graphiques, **Paramètres → Charger 3 mois de démo** remplit l'historique avec un grimpeur fictif qui progresse.
 
 ## Lancer l'appli (sans la planche)
 
@@ -36,7 +51,7 @@ Un QR code s'affiche :
 - **iPhone** : scannez le QR code avec l'appareil photo.
 - **Ordinateur** : appuyez sur la touche `w` pour l'ouvrir dans le navigateur.
 
-Dans l'appli, allez dans **Se connecter → Utiliser le simulateur**. Le simulateur imite la planche : la force monte toute seule pendant les tests et les suspensions.
+Le simulateur se connecte tout seul : vous pouvez directement faire un test de force ou une séance.
 
 ## Utiliser la vraie planche (Bluetooth)
 
@@ -76,8 +91,8 @@ Le format exact des messages échangés est décrit dans [docs/protocole.md](doc
 
 ```
 src/
-  app/        les écrans (accueil, connexion, test, entraînement, séance, profil, réglages)
-  core/       les calculs, sans écran : forces, analyse d'une suspension, niveaux, plans, adaptation
+  app/        les écrans : (onglets)/ = Accueil, Séance, Test ; parametres ; plan/[id] = déroulé d'une séance
+  core/       les calculs, sans écran : forces, analyse, score, plans, programme, adaptation, démo
   ble/        la connexion Bluetooth et le simulateur
   state/      les données partagées (profil, réglages, historique, connexion)
   ui/         les éléments visuels réutilisés (boutons, jauge de force, graphique)

@@ -19,10 +19,16 @@ export interface Planche {
   deconnecter(): Promise<void>;
 }
 
-/** Informations que l'appli donne au simulateur pour qu'il "joue le jeu". */
+/**
+ * Ce que l'appli dit au simulateur pour qu'il "joue le jeu".
+ * - force-max : le grimpeur virtuel tire le plus fort possible ;
+ * - tenir : il se suspend avec son poids et lâche au bout de 15 à 35 s ;
+ * - entrainement : il vise la charge demandée (zone verte).
+ */
 export interface PhaseSimulee {
   suspendu: boolean;
   main: 'gauche' | 'droite' | 'deux';
-  /** Charge visée en kg (sinon le simulateur utilise environ 90 % du poids de corps). */
+  mode?: 'force-max' | 'tenir' | 'entrainement';
+  /** Charge visée en kg (mode entrainement). */
   chargeKg?: number;
 }

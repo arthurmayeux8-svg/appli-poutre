@@ -4,7 +4,7 @@ import { FournisseurConnexion } from '../state/connexion';
 import { FournisseurDonnees } from '../state/donnees';
 import { couleurs } from '../ui/composants';
 
-/** Structure générale de l'appli : les données, la connexion, puis les écrans. */
+/** Structure générale : les données, la connexion, puis les écrans. */
 export default function Layout() {
   return (
     <FournisseurDonnees>
@@ -16,15 +16,12 @@ export default function Layout() {
             headerTintColor: couleurs.texte,
             headerShadowVisible: false,
             contentStyle: { backgroundColor: couleurs.fond },
+            headerBackTitle: 'Retour',
           }}
         >
-          <Stack.Screen name="index" options={{ title: 'Poutre' }} />
-          <Stack.Screen name="connexion" options={{ title: 'Connexion' }} />
-          <Stack.Screen name="test" options={{ title: 'Test de force' }} />
-          <Stack.Screen name="entrainement" options={{ title: 'Entraînement' }} />
-          <Stack.Screen name="seance/[id]" options={{ title: 'Séance' }} />
-          <Stack.Screen name="profil" options={{ title: 'Profil et progression' }} />
-          <Stack.Screen name="reglages" options={{ title: 'Réglages' }} />
+          <Stack.Screen name="(onglets)" options={{ headerShown: false }} />
+          <Stack.Screen name="parametres" options={{ title: 'Paramètres' }} />
+          <Stack.Screen name="plan/[id]" options={{ title: 'Séance' }} />
         </Stack>
       </FournisseurConnexion>
     </FournisseurDonnees>
