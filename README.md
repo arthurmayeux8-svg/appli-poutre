@@ -2,6 +2,14 @@
 
 Application mobile (Android et iPhone) de la poutre d'escalade instrumentée. Elle se connecte à la planche en Bluetooth, mesure la force des doigts, propose des plans d'entraînement adaptés au niveau et suit la progression au fil du temps.
 
+## Ouvrir le site
+
+**https://arthurmayeux8-svg.github.io/appli-poutre/** : rien à installer.
+
+- Pour se connecter à la planche en Bluetooth : **Chrome** sur Android ou ordinateur, **Bluefy** (gratuit) sur iPhone.
+- Sans planche, le simulateur se connecte tout seul.
+- Toute la documentation du projet (décisions, câblage, mise en route, glossaire) est dans [docs/](docs/README.md).
+
 ## Ce que fait l'appli
 
 L'appli a trois onglets en bas, et une roue dentée en haut à droite pour les paramètres.

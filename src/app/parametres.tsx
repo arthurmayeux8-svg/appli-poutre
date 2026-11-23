@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Platform, Pressable, StyleSheet, Switch, Text, TextInput, View } from 'react-native';
 import { bluetoothDisponible, chercherPlanches } from '../ble/bluetooth';
 import { AppareilTrouve } from '../ble/planche';
 import { genererHistoriqueDemo } from '../core/demo';
+import { capteurLePlusCharge, ETALONNAGE_NEUTRE, regleFacteur } from '../core/etalonnage';
 import { peutSeparerLesMains } from '../core/forces';
 import { CapteurConfig, CoteCapteur } from '../core/types';
 import { useConnexion } from '../state/connexion';
@@ -70,7 +71,11 @@ function BlocConnexion() {
     setMessage(null);
     setRecherche(true);
     const stop = await chercherPlanches(
-      (a) => setAppareils((l) => [...l, a]),
+      (a) => {
+        setAppareils((l) => [...l, a]);
+        // Dans un navigateur, l'appareil vient d'être choisi dans la liste du navigateur : on se connecte tout de suite.
+        if (Platform.OS === 'web') void c.connecter(a);
+      },
       (m) => {
         setMessage(m);
         setRecherche(false);
@@ -135,7 +140,7 @@ function BlocConnexion() {
             )}
             <View style={{ flexDirection: 'row', gap: 8 }}>
               <View style={{ flex: 1 }}>
-                <Bouton titre="Remise à zéro" variante="contour" onPress={c.tare} />
+                <Bouton titre="Remise à zéro" variante="contour" onPress={() => c.tare()} />
               </View>
               <View style={{ flex: 1 }}>
                 <Bouton titre="Déconnecter" variante="danger" onPress={c.deconnecter} />
@@ -159,7 +164,10 @@ function BlocConnexion() {
       <Carte titre="Planche Bluetooth">
         {bleOk ? (
           <>
-            <T doux>Allumez la planche puis lancez la recherche. Le module s'appelle souvent « HMSoft », « BT05 » ou « Poutre ».</T>
+            <T doux>
+              Allumez la planche puis lancez la recherche. Le module s'appelle souvent « HMSoft », « BT05 » ou « Poutre ».
+              {Platform.OS === 'web' ? ' Le navigateur affiche la liste : choisissez la planche.' : ''}
+            </T>
             <Bouton titre={recherche ? 'Recherche…' : 'Chercher la planche'} onPress={lancerRecherche} desactive={recherche} />
             {recherche ? <ActivityIndicator /> : null}
             {message ? <T>{message}</T> : null}
@@ -169,8 +177,9 @@ function BlocConnexion() {
           </>
         ) : (
           <T doux>
-            Le Bluetooth n'est pas disponible ici (navigateur ou Expo Go). Pour la vraie planche, il faut la version
-            « développement » de l'appli sur le téléphone (voir le README). En attendant, le simulateur fait tout.
+            {Platform.OS === 'web'
+              ? 'Ce navigateur ne gère pas le Bluetooth. Sur iPhone, ouvrez ce site dans l\u2019appli gratuite « Bluefy ». Sur Android ou ordinateur, utilisez Chrome.'
+              : 'Le Bluetooth n\u2019est pas disponible dans Expo Go. Utilisez le site dans Chrome ou Bluefy, ou la version installée de l\u2019appli (voir le README).'}
           </T>
         )}
       </Carte>
@@ -182,6 +191,8 @@ function BlocConnexion() {
 
 function BlocReglages() {
   const { reglages, majReglages } = useDonnees();
+  const c = useConnexion();
+  const capteurActif = capteurLePlusCharge(c.capteursKg);
   const [nomPrise, setNomPrise] = useState('');
   const [mmPrise, setMmPrise] = useState('');
 
@@ -200,32 +211,57 @@ function BlocReglages() {
   return (
     <>
       <Carte titre="Capteurs">
-        <T doux>Nombre de capteurs branchés sur l'Arduino, dans l'ordre où il les envoie, et leur côté sur la planche.</T>
-        <Choix
-          valeur={String(reglages.capteurs.length)}
-          onChange={(v) => changerNombre(Number(v))}
-          options={['1', '2', '3', '4'].map((v) => ({ valeur: v, libelle: v }))}
-        />
-        {reglages.capteurs.map((c) => (
-          <View key={c.index} style={[styles.ligne, { justifyContent: 'space-between' }]}>
-            <T>Capteur {c.index + 1}</T>
+        {c.configParPlanche ? (
+          <T>La planche a envoyé sa configuration : nombre de capteurs et côtés réglés automatiquement.</T>
+        ) : (
+          <>
+            <T doux>Nombre de capteurs branchés sur l'Arduino, et leur côté sur la planche.</T>
             <Choix
-              valeur={c.cote}
-              onChange={(cote) => changerCote(c.index, cote)}
-              options={[
-                { valeur: 'gauche', libelle: 'Gauche' },
-                { valeur: 'centre', libelle: 'Centre' },
-                { valeur: 'droite', libelle: 'Droite' },
-              ]}
+              valeur={String(reglages.capteurs.length)}
+              onChange={(v) => changerNombre(Number(v))}
+              options={['1', '2', '3', '4'].map((v) => ({ valeur: v, libelle: v }))}
             />
-          </View>
-        ))}
+          </>
+        )}
+        {reglages.capteurs.map((cap) => {
+          const actif = c.etat === 'connecte' && capteurActif === cap.index;
+          const valeur = c.capteursKg[cap.index];
+          return (
+            <View key={cap.index} style={[styles.capteur, actif && styles.capteurActif]}>
+              <View style={{ minWidth: 90 }}>
+                <Text style={styles.titreCapteur}>Capteur {cap.index + 1}</Text>
+                <Text style={styles.valeurCapteur}>{valeur !== undefined ? `${valeur.toFixed(1)} kg` : '–'}</Text>
+              </View>
+              {c.configParPlanche ? (
+                <T>{cap.cote === 'gauche' ? 'Gauche' : cap.cote === 'droite' ? 'Droite' : 'Centre'}</T>
+              ) : (
+                <Choix
+                  valeur={cap.cote}
+                  onChange={(cote) => changerCote(cap.index, cote)}
+                  options={[
+                    { valeur: 'gauche', libelle: 'Gauche' },
+                    { valeur: 'centre', libelle: 'Centre' },
+                    { valeur: 'droite', libelle: 'Droite' },
+                  ]}
+                />
+              )}
+            </View>
+          );
+        })}
+        {!c.configParPlanche && c.etat === 'connecte' ? (
+          <T doux>
+            Pour savoir quel capteur est où : appuyez fort sur un coin de la planche. Le capteur qui s'allume en orange est
+            sous ce coin. Donnez-lui son côté. (Une fois le côté écrit dans le programme Arduino, ce réglage se fait tout seul.)
+          </T>
+        ) : null}
         <T doux>
           {peutSeparerLesMains(reglages.capteurs)
-            ? 'L’appli peut séparer main gauche et main droite, même à deux mains.'
-            : 'La dissymétrie se mesurera en testant un bras, puis l’autre.'}
+            ? 'L\u2019appli peut séparer main gauche et main droite, même à deux mains.'
+            : 'La dissymétrie se mesurera en testant un bras, puis l\u2019autre.'}
         </T>
       </Carte>
+
+      <CarteEtalonnage />
 
       <Carte titre="Prises">
         {reglages.prises.map((p) => (
@@ -277,6 +313,89 @@ function BlocReglages() {
         />
       </Carte>
     </>
+  );
+}
+
+/* ---------------------------------------------------------------- */
+
+/**
+ * Étalonnage guidé, pour l'équipe : à faire une fois, avec un poids connu.
+ * Il corrige les valeurs dans l'appli, sans toucher au programme Arduino.
+ */
+function CarteEtalonnage() {
+  const c = useConnexion();
+  const { reglages, majReglages, profil } = useDonnees();
+  const [cible, setCible] = useState<string>('tous');
+  const [poids, setPoids] = useState(String(profil.poidsCorpsKg));
+  const [etat, setEtat] = useState<'attente' | 'mesure'>('attente');
+  const [resultat, setResultat] = useState<string | null>(null);
+  const connecte = c.etat === 'connecte';
+
+  const mesurer = () => {
+    const kg = nombre(poids, 0);
+    if (kg <= 0) return;
+    setResultat(null);
+    setEtat('mesure');
+    // On laisse 3 secondes pour stabiliser, puis on fait la moyenne des dernières mesures.
+    setTimeout(() => {
+      const m = c.moyenneBrute(40);
+      const capteur = cible === 'tous' ? 'tous' : Number(cible);
+      const nouveau = regleFacteur(reglages.etalonnage, m, capteur, kg);
+      setEtat('attente');
+      if (!nouveau) {
+        setResultat('Mesure trop faible : le poids est-il bien posé ? Recommencez.');
+        return;
+      }
+      majReglages({ ...reglages, etalonnage: nouveau });
+      // Pour enregistrer l'étalonnage dans la planche elle-même : nouveau FACTEURS[i] = ancien ÷ facteur de l'appli.
+      const lignes = nouveau.facteurs
+        .map((f, i) => `Capteur ${i + 1} : FACTEURS[${i}] actuel ÷ ${f.toFixed(4)}`)
+        .join('\n');
+      setResultat(
+        `Étalonné : la planche affiche maintenant ${kg} kg pour ce poids, sur cet appareil.\n\n` +
+          `Pour que tous les utilisateurs en profitent, reportez-le dans le programme Arduino :\n${lignes}\n` +
+          `(exemple : 420 ÷ 1.0500 = 400), puis effacez l'étalonnage de l'appli.`,
+      );
+    }, 3000);
+  };
+
+  return (
+    <Carte titre="Étalonnage (pour l'équipe)">
+      <T doux>
+        À faire une fois par l'équipe, avec un poids connu (packs d'eau pesés, ou soi-même pesé sur une balance). L'appli
+        donne ensuite les facteurs à écrire dans le programme Arduino : l'utilisateur final n'aura rien à faire.
+      </T>
+      <T>1. Planche vide : remise à zéro.</T>
+      <Bouton titre="Remise à zéro" variante="contour" onPress={() => c.tare()} desactive={!connecte} />
+      <T>2. Où est le poids connu ?</T>
+      <Choix
+        valeur={cible}
+        onChange={(v) => {
+          setCible(v);
+          if (v === 'tous') setPoids(String(profil.poidsCorpsKg));
+        }}
+        options={[
+          { valeur: 'tous', libelle: 'Toute la planche' },
+          ...reglages.capteurs.map((cap) => ({ valeur: String(cap.index), libelle: `Capteur ${cap.index + 1}` })),
+        ]}
+      />
+      <T doux>
+        {cible === 'tous'
+          ? 'Suspendez-vous à deux mains, pieds décollés, ou accrochez le poids au milieu de la planche.'
+          : 'Posez ou accrochez le poids juste au-dessus de ce capteur.'}
+      </T>
+      <T>3. Poids connu (kg)</T>
+      <TextInput style={styles.champ} keyboardType="decimal-pad" value={poids} onChangeText={setPoids} />
+      <Bouton
+        titre={etat === 'mesure' ? 'Mesure en cours… restez immobile' : 'Mesurer et étalonner'}
+        onPress={mesurer}
+        desactive={!connecte || etat === 'mesure'}
+      />
+      {resultat ? <T>{resultat}</T> : null}
+      <Pressable onPress={() => majReglages({ ...reglages, etalonnage: ETALONNAGE_NEUTRE })}>
+        <Text style={{ color: couleurs.texteDoux, textDecorationLine: 'underline' }}>Effacer l'étalonnage de l'appli</Text>
+      </Pressable>
+    </Carte>
   );
 }
 
@@ -336,6 +455,10 @@ const styles = StyleSheet.create({
   ligne: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   point: { width: 10, height: 10, borderRadius: 5 },
   titre: { fontSize: 17, fontWeight: '700', color: couleurs.texte },
+  capteur: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', padding: 8, borderRadius: 10, borderWidth: 1.5, borderColor: 'transparent' },
+  capteurActif: { borderColor: couleurs.accent, backgroundColor: couleurs.accentDoux },
+  titreCapteur: { fontSize: 15, fontWeight: '600', color: couleurs.texte },
+  valeurCapteur: { fontSize: 13, color: couleurs.texteDoux, fontVariant: ['tabular-nums'] },
   maintenir: { borderWidth: 2, borderColor: couleurs.accent, borderRadius: 14, paddingVertical: 22, alignItems: 'center' },
   texteMaintenir: { fontSize: 16, fontWeight: '700', color: couleurs.accent },
 });

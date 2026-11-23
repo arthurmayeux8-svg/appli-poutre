@@ -1,0 +1,16 @@
+{
+  "name": "Poutre d'escalade",
+  "short_name": "Poutre",
+  "description": "Tests de force et entraînement sur poutre d'escalade instrumentée",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F4F1EC",
+  "theme_color": "#F4F1EC",
+  "lang": "fr",
+  "icons": [
+    { "src": "icone-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

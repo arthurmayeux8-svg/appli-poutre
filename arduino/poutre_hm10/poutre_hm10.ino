@@ -20,11 +20,30 @@
 #include "HX711.h"
 
 const int NB_CAPTEURS = 2;               // <-- mettre 1, 2, 3 ou 4
+
+// Côté de chaque capteur sur la planche : 'G' = gauche, 'D' = droite, 'M' = milieu.
+// L'appli le reçoit toute seule : l'utilisateur n'a rien à régler.
+// (Pour savoir quel capteur est où : Paramètres > Capteurs dans l'appli, appuyez sur un coin
+//  de la planche et regardez quel capteur réagit.)
+const char COTES[4] = {'G', 'D', 'G', 'D'};
 const int BROCHES_DT[4]  = {2, 4, 6, 8};
 const int BROCHES_SCK[4] = {3, 5, 7, 9};
 
-// Facteur d'étalonnage de chaque capteur (voir "Étalonner" dans le README).
-float FACTEURS[4] = {420.0, 420.0, 420.0, 420.0};
+// Facteur d'étalonnage de chaque capteur. Deux façons de le régler :
+//  - dans l'appli (Paramètres > Étalonnage), sans toucher à ce programme ;
+//  - ou ici, une fois pour toutes (voir "Étalonner" dans le README).
+float FACTEURS[4] = {420.0, 420.0, 420.0, 420.0}; // voir le README pour l'étalonnage
+unsigned long derniereConfig = 0;
+
+// Ligne de configuration "C,G,D,...", envoyée toutes les 2 secondes.
+String ligneConfig() {
+  String c = "C";
+  for (int i = 0; i < NB_CAPTEURS; i++) {
+    c += ",";
+    c += COTES[i];
+  }
+  return c + "\n";
+}
 
 SoftwareSerial bluetooth(10, 11); // RX, TX
 HX711 capteurs[4];
@@ -57,6 +76,11 @@ void loop() {
     ligne += grammes;
   }
   ligne += "\n";
+  // Toutes les 2 s, on ajoute la configuration (côtés des capteurs) pour l'appli.
+  if (millis() - derniereConfig > 2000) {
+    ligne = ligneConfig() + ligne;
+    derniereConfig = millis();
+  }
   bluetooth.print(ligne);
   Serial.print(ligne);
   // Un HX711 en mode 10 mesures/s limite le rythme ; passer la broche RATE à 80 Hz pour ~20 lignes/s.
