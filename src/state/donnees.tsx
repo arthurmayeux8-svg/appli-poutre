@@ -21,6 +21,7 @@ export const REGLAGES_PAR_DEFAUT: Reglages = {
   ],
   seuilSuspensionKg: 5,
   dureeTestForceS: 7,
+  simulateurAuDemarrage: true,
 };
 
 export const PROFIL_PAR_DEFAUT: Profil = { nom: 'Grimpeur', poidsCorpsKg: 70 };
@@ -43,6 +44,8 @@ interface Donnees {
   ajouterTest(t: ResultatTest): void;
   supprimerTest(id: string): void;
   ajouterSeance(s: SeanceFaite): void;
+  /** Remplace tout l'historique (démo) ; listes vides = tout effacer. */
+  remplacerHistorique(tests: ResultatTest[], seances: SeanceFaite[]): void;
 }
 
 const Contexte = createContext<Donnees | null>(null);
@@ -107,9 +110,16 @@ export function FournisseurDonnees({ children }: { children: ReactNode }) {
     });
   }, []);
 
+  const remplacerHistorique = useCallback((t: ResultatTest[], s: SeanceFaite[]) => {
+    setTests(t);
+    setSeances(s);
+    sauver(CLES.tests, t);
+    sauver(CLES.seances, s);
+  }, []);
+
   return (
     <Contexte.Provider
-      value={{ pret, profil, reglages, tests, seances, majProfil, majReglages, ajouterTest, supprimerTest, ajouterSeance }}
+      value={{ pret, profil, reglages, tests, seances, majProfil, majReglages, ajouterTest, supprimerTest, ajouterSeance, remplacerHistorique }}
     >
       {children}
     </Contexte.Provider>

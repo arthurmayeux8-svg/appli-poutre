@@ -28,6 +28,8 @@ export interface Reglages {
   seuilSuspensionKg: number;
   /** Durée d'un test de force max, en secondes. */
   dureeTestForceS: number;
+  /** Tant que la planche n'existe pas : connecter le simulateur au lancement de l'appli. */
+  simulateurAuDemarrage: boolean;
 }
 
 /** Une mesure reçue de la planche, déjà convertie en kg. */

@@ -1,4 +1,5 @@
 import { dissymetriePct, mainLaPlusFaible } from './forces';
+import { niveauPourScore, scoreActuel } from './score';
 import { Main, Niveau, Prise, ResultatTest, SeanceFaite } from './types';
 
 /* ------------------------------------------------------------------ */
@@ -13,11 +14,11 @@ export const NOMS_NIVEAUX: Record<Niveau, string> = {
 };
 
 /**
- * Seuils de niveau, en % du poids de corps, pour la force max à deux mains
- * sur une réglette d'environ 20 mm (repères courants en escalade).
- * Ces valeurs sont un point de départ : à ajuster avec vos propres mesures.
+ * Le niveau découle du score de grimpe de 1 à 10 (voir score.ts).
  */
-export const SEUILS_NIVEAU_PCT = { intermediaire: 100, confirme: 130, expert: 160 };
+export function calculerNiveau(tests: ResultatTest[]): Niveau {
+  return niveauPourScore(scoreActuel(tests));
+}
 
 /** Force max à deux mains la plus récente, en kg (ou somme gauche + droite). */
 export function forceReferenceDeuxMains(tests: ResultatTest[]): ResultatTest | null {
@@ -27,19 +28,9 @@ export function forceReferenceDeuxMains(tests: ResultatTest[]): ResultatTest | n
   const d = forces.filter((t) => t.main === 'droite').pop();
   if (g && d && (!deux || (g.date > deux.date && d.date > deux.date))) {
     // Les tests à une main sont plus récents : on les additionne.
-    return { ...d, main: 'deux', forceMaxKg: g.forceMaxKg + d.forceMaxKg };
+    return { ...d, main: 'deux', forceMaxKg: g.forceMaxKg + d.forceMaxKg, gaucheMaxKg: g.forceMaxKg, droiteMaxKg: d.forceMaxKg };
   }
   return deux ?? null;
-}
-
-export function calculerNiveau(tests: ResultatTest[]): Niveau {
-  const ref = forceReferenceDeuxMains(tests);
-  if (!ref || ref.poidsCorpsKg <= 0) return 'debutant';
-  const pct = (ref.forceMaxKg / ref.poidsCorpsKg) * 100;
-  if (pct >= SEUILS_NIVEAU_PCT.expert) return 'expert';
-  if (pct >= SEUILS_NIVEAU_PCT.confirme) return 'confirme';
-  if (pct >= SEUILS_NIVEAU_PCT.intermediaire) return 'intermediaire';
-  return 'debutant';
 }
 
 /** Dissymétrie la plus récente connue (tests à une main ou détail à deux mains). */

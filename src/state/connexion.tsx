@@ -33,13 +33,15 @@ interface Connexion {
   arreterEnregistrement(): Echantillon[];
   /** Ne sert qu'au simulateur : indique si le grimpeur est censé être suspendu. */
   indiquerPhase(phase: PhaseSimulee): void;
+  /** Simulateur : suspendre le grimpeur virtuel à la main (bouton maintenu). */
+  suspensionManuelle(active: boolean): void;
 }
 
 const ZERO: Forces = { totalKg: 0, gaucheKg: null, droiteKg: null };
 const Contexte = createContext<Connexion | null>(null);
 
 export function FournisseurConnexion({ children }: { children: ReactNode }) {
-  const { reglages, profil } = useDonnees();
+  const { reglages, profil, pret } = useDonnees();
   const [etat, setEtat] = useState<Etat>('deconnecte');
   const [planche, setPlanche] = useState<Planche | null>(null);
   const [forces, setForces] = useState<Forces>(ZERO);
@@ -116,6 +118,14 @@ export function FournisseurConnexion({ children }: { children: ReactNode }) {
     );
   }, [brancher, deconnecter]);
 
+  // Tant que la planche n'existe pas : simulateur connecté automatiquement au lancement.
+  const dejaTente = useRef(false);
+  useEffect(() => {
+    if (!pret || dejaTente.current) return;
+    dejaTente.current = true;
+    if (reglages.simulateurAuDemarrage && !plancheRef.current) void connecterSimulateur();
+  }, [pret, reglages.simulateurAuDemarrage, connecterSimulateur]);
+
   // Déconnexion propre quand l'appli se ferme.
   useEffect(() => () => void plancheRef.current?.deconnecter(), []);
 
@@ -141,6 +151,9 @@ export function FournisseurConnexion({ children }: { children: ReactNode }) {
     },
     indiquerPhase: (phase) => {
       if (plancheRef.current instanceof PlancheSimulee) plancheRef.current.definirPhase(phase);
+    },
+    suspensionManuelle: (active) => {
+      if (plancheRef.current instanceof PlancheSimulee) plancheRef.current.suspensionManuelle(active);
     },
   };
 

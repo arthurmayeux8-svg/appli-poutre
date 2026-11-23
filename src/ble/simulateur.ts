@@ -4,19 +4,23 @@ import { PhaseSimulee, Planche } from './planche';
 
 /**
  * Fausse planche, pour développer et tester l'appli sans matériel.
- * Elle envoie exactement les mêmes messages que l'Arduino ("P,...").
+ * Elle envoie exactement les mêmes messages que l'Arduino ("P,...") 20 fois par seconde.
  *
- * Elle "joue le jeu" : quand l'appli lui dit que le grimpeur est suspendu
- * (pendant un test ou une suspension d'entraînement), elle simule une charge
- * réaliste avec un peu de bruit et de fatigue ; sinon elle renvoie ~0.
- * La main gauche est volontairement ~15 % plus faible, pour voir la dissymétrie.
+ * Un "grimpeur virtuel" se suspend tout seul pendant les tests et les séances :
+ * - sa force max à deux mains vaut environ 115 % de son poids de corps,
+ * - sa main gauche est ~15 % plus faible que la droite (pour voir la dissymétrie),
+ * - il fatigue un peu au fil de la suspension.
+ * On peut aussi le faire se suspendre à la main (bouton "Maintenir" dans les paramètres).
  */
 export class PlancheSimulee implements Planche {
   nom = 'Simulateur';
   private minuteur: ReturnType<typeof setInterval> | null = null;
   private phase: PhaseSimulee = { suspendu: false, main: 'deux' };
-  private debutSuspension = 0;
-  private decalageG = 0;
+  private manuel = false;
+  private debut = 0;
+  private lacherApresS = 25;
+  private chargeActuelleG = 0;
+  private decalageG: number[] = [0, 0, 0, 0];
 
   constructor(
     private capteurs: () => CapteurConfig[],
@@ -24,16 +28,27 @@ export class PlancheSimulee implements Planche {
   ) {}
 
   definirPhase(phase: PhaseSimulee) {
-    if (phase.suspendu && !this.phase.suspendu) this.debutSuspension = Date.now();
+    if (phase.suspendu && !this.phase.suspendu) {
+      this.debut = Date.now();
+      this.lacherApresS = 15 + Math.random() * 20;
+    }
     this.phase = phase;
   }
 
+  /** Suspension "à la main" : tant que c'est vrai, le grimpeur virtuel est suspendu. */
+  suspensionManuelle(active: boolean) {
+    if (active && !this.manuel) this.debut = Date.now();
+    this.manuel = active;
+  }
+
   async demarrer(onLigne: (ligne: string) => void) {
-    this.minuteur = setInterval(() => onLigne(ecrireLigneMesure(this.mesurer())), 50); // 20 Hz
+    // Petit décalage de zéro au démarrage, comme un vrai capteur avant la tare.
+    this.decalageG = this.decalageG.map(() => (Math.random() - 0.5) * 400);
+    this.minuteur = setInterval(() => onLigne(ecrireLigneMesure(this.mesurer())), 50);
   }
 
   async envoyer(commande: string) {
-    if (commande === COMMANDE_TARE) this.decalageG = 0;
+    if (commande === COMMANDE_TARE) this.decalageG = this.decalageG.map(() => 0);
   }
 
   async deconnecter() {
@@ -41,36 +56,57 @@ export class PlancheSimulee implements Planche {
     this.minuteur = null;
   }
 
+  /** Charge (kg) que le grimpeur virtuel cherche à mettre en ce moment. */
+  private chargeVisee(): { kg: number; main: PhaseSimulee['main'] } {
+    const poids = this.poidsCorpsKg() || 70;
+    const ecoule = (Date.now() - this.debut) / 1000;
+    if (this.manuel) return { kg: poids, main: 'deux' };
+    const p = this.phase;
+    if (!p.suspendu) return { kg: 0, main: p.main };
+
+    const forceMaxDeuxMains = poids * 1.15;
+    const forceMaxMain = p.main === 'deux' ? forceMaxDeuxMains : p.main === 'gauche' ? forceMaxDeuxMains * 0.46 : forceMaxDeuxMains * 0.54;
+    const fatigue = Math.max(0.7, 1 - ecoule * 0.006);
+
+    switch (p.mode) {
+      case 'force-max':
+        return { kg: forceMaxMain * fatigue, main: p.main };
+      case 'tenir':
+        return { kg: ecoule < this.lacherApresS ? Math.min(poids, forceMaxMain) : 0, main: p.main };
+      default: {
+        // Entraînement : vise la zone, avec de petites variations.
+        const vise = p.chargeKg ?? poids * 0.8;
+        const oscillation = 1 + 0.04 * Math.sin(ecoule * 2.3);
+        return { kg: Math.min(vise * oscillation, forceMaxMain), main: p.main };
+      }
+    }
+  }
+
   private mesurer(): number[] {
     const capteurs = this.capteurs();
     const nb = Math.max(1, capteurs.length);
-    const bruit = () => (Math.random() - 0.5) * 60; // ±30 g
-    if (!this.phase.suspendu) return Array.from({ length: nb }, () => this.decalageG + bruit());
+    const { kg, main } = this.chargeVisee();
 
-    // Charge totale en grammes : montée en 0,4 s, puis légère fatigue.
-    const ecoule = (Date.now() - this.debutSuspension) / 1000;
-    const montee = Math.min(1, ecoule / 0.4);
-    const fatigue = Math.max(0.6, 1 - ecoule * 0.004);
-    const base = this.phase.chargeKg ?? this.poidsCorpsKg() * 0.9;
-    const totalG = base * 1000 * montee * fatigue * (1 + (Math.random() - 0.5) * 0.03);
+    // La charge suit la cible en douceur (montée en ~0,4 s).
+    this.chargeActuelleG += (kg * 1000 - this.chargeActuelleG) * 0.25;
+    const totalG = this.chargeActuelleG * (1 + (Math.random() - 0.5) * 0.02);
 
-    // Répartition gauche / droite (main gauche un peu plus faible).
-    let partG = 0.46;
-    if (this.phase.main === 'gauche') partG = 1;
-    if (this.phase.main === 'droite') partG = 0;
-    const gaucheG = totalG * partG;
+    let partGauche = 0.46;
+    if (main === 'gauche') partGauche = 1;
+    if (main === 'droite') partGauche = 0;
+    const gaucheG = totalG * partGauche;
     const droiteG = totalG - gaucheG;
 
     const nbG = capteurs.filter((c) => c.cote === 'gauche').length;
     const nbD = capteurs.filter((c) => c.cote === 'droite').length;
-    const nbC = capteurs.filter((c) => c.cote === 'centre').length;
+    const aCentre = capteurs.some((c) => c.cote === 'centre');
     const valeurs = new Array(nb).fill(0);
     for (const c of capteurs) {
       let v = 0;
-      if (nbC > 0) v = totalG / nb; // un capteur central voit tout (réparti s'il y en a plusieurs)
+      if (aCentre) v = totalG / nb;
       else if (c.cote === 'gauche') v = gaucheG / nbG;
-      else if (c.cote === 'droite') v = droiteG / nbD;
-      valeurs[c.index] = v + bruit();
+      else v = droiteG / nbD;
+      valeurs[c.index] = v + (this.decalageG[c.index] ?? 0) + (Math.random() - 0.5) * 60;
     }
     return valeurs;
   }
