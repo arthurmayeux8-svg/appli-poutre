@@ -37,6 +37,7 @@ String ligneConfig() {
 }
 
 HX711 capteurs[4];
+long dernieres[4] = {0, 0, 0, 0}; // dernière valeur lue de chaque capteur
 BLEService service("FFE0");
 BLECharacteristic carac("FFE1", BLERead | BLENotify | BLEWrite | BLEWriteWithoutResponse, 20);
 
@@ -71,10 +72,10 @@ void loop() {
 
   String ligne = "P";
   for (int i = 0; i < NB_CAPTEURS; i++) {
-    long grammes = 0;
-    if (capteurs[i].wait_ready_timeout(100)) grammes = (long)capteurs[i].get_units(1);
+    // Si un HX711 ne répond pas à temps, on renvoie sa dernière valeur (jamais un faux 0).
+    if (capteurs[i].wait_ready_timeout(100)) dernieres[i] = (long)capteurs[i].get_units(1);
     ligne += ",";
-    ligne += grammes;
+    ligne += dernieres[i];
   }
   ligne += "\n";
   // Toutes les 2 s, on ajoute la configuration (côtés des capteurs) pour l'appli.

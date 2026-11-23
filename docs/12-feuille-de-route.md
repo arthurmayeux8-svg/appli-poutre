@@ -12,7 +12,7 @@
 ## À faire
 
 - [ ] Fabriquer la planche et fixer les cellules (SolidWorks, calcul à 150 kg dynamique)
-- [ ] Câbler, téléverser, étalonner (voir 05-mise-en-route-planche.md)
+- [ ] Câbler, téléverser, étalonner (voir 06-mise-en-route-planche.md)
 - [ ] Premier essai réel avec le site dans Chrome ou Bluefy
 - [ ] Ajuster les seuils de niveau et les plans avec de vraies mesures
 - [ ] Batterie Li-Po et boîtier
