@@ -93,7 +93,7 @@ Chaque capteur a un « facteur d'étalonnage » qui transforme sa mesure brute e
 2. Planche vide, puis posez un poids connu (par exemple 5 000 g) sur ce capteur.
 3. Facteur = valeur affichée ÷ 5 000. Reportez-le dans `FACTEURS[i]` et téléversez à nouveau.
 
-Le format exact des messages échangés est décrit dans [docs/protocole.md](docs/protocole.md).
+Le format exact des messages échangés est décrit dans [docs/protocole.md](docs/protocole.md). Ce que la carte doit faire, exigence par exigence, avec une liste de contrôle : [docs/05-cahier-des-charges-communication.md](docs/05-cahier-des-charges-communication.md).
 
 ## Organisation du code
 
