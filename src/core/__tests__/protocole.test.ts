@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DecoupeurLignes, ecrireLigneMesure, lireLigneMesure } from '../protocole';
+import { DecoupeurLignes, ecrireLigneMesure, lireLigneConfig, lireLigneMesure } from '../protocole';
 import { base64VersTexte, texteVersBase64 } from '../../ble/base64';
 
 describe('protocole', () => {
@@ -22,5 +22,12 @@ describe('protocole', () => {
   it('encode et décode le base64', () => {
     for (const t of ['T\n', 'P,123,456\n', 'ab', 'a']) expect(base64VersTexte(texteVersBase64(t))).toBe(t);
     expect(texteVersBase64('T\n')).toBe('VAo=');
+  });
+  it('lit la configuration envoyée par la planche', () => {
+    expect(lireLigneConfig('C,G,G,D,D')).toEqual(['gauche', 'gauche', 'droite', 'droite']);
+    expect(lireLigneConfig('c,l,r')).toEqual(['gauche', 'droite']);
+    expect(lireLigneConfig('C,M')).toEqual(['centre']);
+    expect(lireLigneConfig('C,X')).toBeNull();
+    expect(lireLigneConfig('P,12')).toBeNull();
   });
 });

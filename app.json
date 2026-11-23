@@ -24,7 +24,9 @@
       "package": "com.poutre.appli"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/favicon.png",
+      "output": "single",
+      "name": "Poutre"
     },
     "plugins": [
       "expo-router",

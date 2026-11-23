@@ -5,6 +5,8 @@
  */
 
 /** Côté de la planche où se trouve un capteur. */
+import type { Etalonnage } from './etalonnage';
+
 export type CoteCapteur = 'gauche' | 'droite' | 'centre';
 
 export interface CapteurConfig {
@@ -30,6 +32,8 @@ export interface Reglages {
   dureeTestForceS: number;
   /** Tant que la planche n'existe pas : connecter le simulateur au lancement de l'appli. */
   simulateurAuDemarrage: boolean;
+  /** Zéro et facteur de chaque capteur, réglés dans l'appli (voir etalonnage.ts). */
+  etalonnage: Etalonnage;
 }
 
 /** Une mesure reçue de la planche, déjà convertie en kg. */

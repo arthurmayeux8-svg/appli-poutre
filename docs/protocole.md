@@ -25,14 +25,24 @@ Exemples :
 | 4 | `P,15100,16020,14800,15300\n` |
 
 - Valeurs en **grammes**, nombres entiers, éventuellement négatifs (léger bruit autour de 0).
-- Les capteurs sont toujours envoyés dans le même ordre. Leur position (gauche, droite, centre) se règle dans l'appli, écran **Réglages**.
+- Les capteurs sont toujours envoyés dans le même ordre. Leur côté est donné par la ligne `C,...` ci-dessous (ou réglé à la main dans Paramètres).
 - Le Bluetooth découpe les messages en morceaux de 20 caractères : l'appli les recolle grâce au `\n` de fin de ligne.
+
+## De la planche vers l'appli : la configuration
+
+Toutes les 2 secondes, une ligne qui donne le côté de chaque capteur :
+
+```
+C,G,G,D,D\n
+```
+
+`G` = gauche, `D` = droite, `M` = milieu (on accepte aussi `L`, `R`, `C`). L'appli règle alors toute seule le nombre de capteurs et leur côté. Ces côtés s'écrivent dans le tableau `COTES` du programme Arduino.
 
 ## De l'appli vers la planche : les commandes
 
 | Commande | Effet |
 |---|---|
-| `T\n` | Remise à zéro (tare) de tous les capteurs. La planche doit être vide. |
+| `T\n` | Remise à zéro (tare) de tous les capteurs. La planche doit être vide. Facultatif : l'Arduino fait déjà la remise à zéro à l'allumage, et l'appli a sa propre remise à zéro. |
 
 ## Comment l'appli calcule les forces
 

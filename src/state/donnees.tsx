@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createContext, ReactNode, useCallback, useContext, useEffect, useState } from 'react';
+import { ETALONNAGE_NEUTRE } from '../core/etalonnage';
 import { Profil, Reglages, ResultatTest, SeanceFaite } from '../core/types';
 
 /**
@@ -22,6 +23,7 @@ export const REGLAGES_PAR_DEFAUT: Reglages = {
   seuilSuspensionKg: 5,
   dureeTestForceS: 7,
   simulateurAuDemarrage: true,
+  etalonnage: ETALONNAGE_NEUTRE,
 };
 
 export const PROFIL_PAR_DEFAUT: Profil = { nom: 'Grimpeur', poidsCorpsKg: 70 };
