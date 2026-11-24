@@ -11,7 +11,7 @@ Tout est réglé dans un seul fichier : `src/ui/theme.ts`. Pour changer une coul
 - Un **P** (comme Poutre) : une barre couleur craie et une **boucle orange**.
 - La boucle rappelle l'**anneau du score** de l'accueil, qui se remplit quand on progresse.
 - Sur un carré **ardoise** aux coins arrondis. Reste lisible même en toute petite icône.
-- Proposé le 24/11 parmi trois pistes (le sommet, les doigts, le P jauge), en attente du choix d'Arthur.
+- Choisi par Arthur le 24/11 parmi trois pistes (le sommet, les doigts, le P jauge).
 
 Fichiers :
 
