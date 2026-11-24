@@ -1,32 +1,31 @@
-import { ReactNode } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Ionicons from '@expo/vector-icons/Ionicons';
+import { Children, isValidElement, ReactNode, useRef } from 'react';
+import { Animated, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Apparition, useValeurAnimee } from './animations';
+import { couleurs, ombre, polices, rayons } from './theme';
 
-export const couleurs = {
-  fond: '#F4F1EC',
-  carte: '#FFFFFF',
-  texte: '#1F2421',
-  texteDoux: '#5E6662',
-  accent: '#D9622B', // orange "magnésie & rocher"
-  accentDoux: '#FBE3D6',
-  vert: '#2E8B57',
-  vertDoux: '#D7EEDF',
-  rouge: '#C0392B',
-  bord: '#E2DDD5',
-  bleu: '#3A6EA5',
-};
+export { couleurs, polices } from './theme';
 
+type NomIcone = keyof typeof Ionicons.glyphMap;
+
+/** Un écran qui défile. Ses blocs apparaissent l'un après l'autre. */
 export function Ecran({ children }: { children: ReactNode }) {
+  const blocs = Children.toArray(children);
   return (
     <ScrollView style={{ flex: 1, backgroundColor: couleurs.fond }} contentContainerStyle={styles.ecran}>
-      {children}
+      {blocs.map((b, i) => (
+        <Apparition key={isValidElement(b) && b.key != null ? b.key : i} rang={i}>
+          {b}
+        </Apparition>
+      ))}
     </ScrollView>
   );
 }
 
-export function Carte({ titre, children }: { titre?: string; children: ReactNode }) {
+export function Carte({ titre, children, sombre }: { titre?: string; children: ReactNode; sombre?: boolean }) {
   return (
-    <View style={styles.carte}>
-      {titre ? <Text style={styles.titreCarte}>{titre}</Text> : null}
+    <View style={[styles.carte, sombre && styles.carteSombre]}>
+      {titre ? <Text style={[styles.titreCarte, sombre && { color: couleurs.texteSurArdoise }]}>{titre}</Text> : null}
       {children}
     </View>
   );
@@ -37,28 +36,42 @@ export function Bouton({
   onPress,
   variante = 'plein',
   desactive,
+  icone,
 }: {
   titre: string;
   onPress: () => void;
-  variante?: 'plein' | 'contour' | 'danger';
+  variante?: 'plein' | 'contour' | 'danger' | 'clair';
   desactive?: boolean;
+  icone?: NomIcone;
 }) {
-  const plein = variante === 'plein';
+  const echelle = useRef(new Animated.Value(1)).current;
+  const presser = (v: number) => Animated.spring(echelle, { toValue: v, speed: 40, bounciness: 6, useNativeDriver: false }).start();
+  const couleurTexte =
+    variante === 'plein' ? '#fff' : variante === 'danger' ? couleurs.rouge : variante === 'clair' ? couleurs.ardoise : couleurs.accent;
   return (
-    <Pressable
-      accessibilityRole="button"
-      disabled={desactive}
-      onPress={onPress}
-      style={({ pressed }) => [
-        styles.bouton,
-        plein ? { backgroundColor: couleurs.accent } : { borderWidth: 1.5, borderColor: variante === 'danger' ? couleurs.rouge : couleurs.accent },
-        (pressed || desactive) && { opacity: 0.5 },
-      ]}
-    >
-      <Text style={[styles.texteBouton, { color: plein ? '#fff' : variante === 'danger' ? couleurs.rouge : couleurs.accent }]}>
-        {titre}
-      </Text>
-    </Pressable>
+    <Animated.View style={{ transform: [{ scale: echelle }] }}>
+      <Pressable
+        accessibilityRole="button"
+        disabled={desactive}
+        onPress={onPress}
+        onPressIn={() => presser(0.96)}
+        onPressOut={() => presser(1)}
+        style={({ pressed }) => [
+          styles.bouton,
+          variante === 'plein' && { backgroundColor: pressed ? couleurs.accentFonce : couleurs.accent },
+          variante === 'clair' && { backgroundColor: couleurs.texteSurArdoise },
+          (variante === 'contour' || variante === 'danger') && {
+            borderWidth: 1.5,
+            borderColor: variante === 'danger' ? couleurs.rouge : couleurs.accent,
+            backgroundColor: pressed ? couleurs.accentDoux : 'transparent',
+          },
+          desactive && { opacity: 0.4 },
+        ]}
+      >
+        {icone ? <Ionicons name={icone} size={18} color={couleurTexte} /> : null}
+        <Text style={[styles.texteBouton, { color: couleurTexte }]}>{titre}</Text>
+      </Pressable>
+    </Animated.View>
   );
 }
 
@@ -80,9 +93,11 @@ export function Choix<T extends string>({
           <Pressable
             key={o.valeur}
             onPress={() => onChange(o.valeur)}
-            style={[styles.option, actif && { backgroundColor: couleurs.accent, borderColor: couleurs.accent }]}
+            style={[styles.option, actif && { backgroundColor: couleurs.ardoise, borderColor: couleurs.ardoise }]}
           >
-            <Text style={{ color: actif ? '#fff' : couleurs.texte, fontWeight: '600' }}>{o.libelle}</Text>
+            <Text style={{ color: actif ? couleurs.texteSurArdoise : couleurs.texte, fontFamily: polices.demiGras, fontSize: 14 }}>
+              {o.libelle}
+            </Text>
           </Pressable>
         );
       })}
@@ -113,20 +128,16 @@ export function JaugeForce({ valeurKg, maxKg, cibleKg }: { valeurKg: number; max
   const dansCible = cibleKg ? valeurKg >= cibleKg[0] && valeurKg <= cibleKg[1] : false;
   return (
     <View>
-      <Text style={styles.valeurJauge}>{valeurKg.toFixed(1)} kg</Text>
+      <Text style={[styles.valeurJauge, dansCible && { color: couleurs.vert }]}>
+        {valeurKg.toFixed(1)}
+        <Text style={styles.uniteJauge}> kg</Text>
+      </Text>
       <View style={styles.jauge}>
-        {cibleKg ? (
-          <View
-            style={[
-              styles.zoneCible,
-              { left: pct(cibleKg[0]), width: pct(cibleKg[1] - cibleKg[0]) },
-            ]}
-          />
-        ) : null}
+        {cibleKg ? <View style={[styles.zoneCible, { left: pct(cibleKg[0]), width: pct(cibleKg[1] - cibleKg[0]) }]} /> : null}
         <View style={[styles.barre, { width: pct(valeurKg), backgroundColor: dansCible ? couleurs.vert : couleurs.accent }]} />
       </View>
       {cibleKg ? (
-        <Text style={[styles.texteDoux, { textAlign: 'center', marginTop: 4 }]}>
+        <Text style={[styles.texteDoux, { textAlign: 'center', marginTop: 6 }]}>
           Zone visée : {cibleKg[0].toFixed(0)} à {cibleKg[1].toFixed(0)} kg
         </Text>
       ) : null}
@@ -140,39 +151,78 @@ export function Section({ children }: { children: ReactNode }) {
 }
 
 /** Une petite valeur mise en avant (ex. score, durée). */
-export function Chiffre({ valeur, legende, couleur }: { valeur: string; legende: string; couleur?: string }) {
+export function Chiffre({
+  valeur,
+  legende,
+  couleur,
+  sombre,
+}: {
+  valeur: string;
+  legende: string;
+  couleur?: string;
+  sombre?: boolean;
+}) {
   return (
     <View style={{ flex: 1, alignItems: 'center' }}>
       <Text
         numberOfLines={1}
         adjustsFontSizeToFit
-        style={[styles.chiffre, valeur.length > 5 ? styles.chiffreTexte : null, couleur ? { color: couleur } : null]}
+        style={[
+          styles.chiffre,
+          valeur.length > 5 ? styles.chiffreTexte : null,
+          sombre && { color: couleurs.texteSurArdoise },
+          couleur ? { color: couleur } : null,
+        ]}
       >
         {valeur}
       </Text>
-      <Text style={styles.texteDoux}>{legende}</Text>
+      <Text style={[styles.texteDoux, { textAlign: 'center' }, sombre && { color: couleurs.texteSurArdoiseDoux }]}>{legende}</Text>
     </View>
   );
 }
 
+/** Nombre qui compte jusqu'à sa valeur à l'apparition. */
+export function NombreAnime({ valeur, decimales = 1, style }: { valeur: number; decimales?: number; style?: object }) {
+  const v = useValeurAnimee(valeur);
+  return <Text style={style}>{v.toFixed(decimales)}</Text>;
+}
+
 const styles = StyleSheet.create({
-  ecran: { padding: 16, gap: 12, paddingBottom: 40 },
-  carte: { backgroundColor: couleurs.carte, borderRadius: 14, padding: 16, gap: 10, borderWidth: 1, borderColor: couleurs.bord },
-  titreCarte: { fontSize: 17, fontWeight: '700', color: couleurs.texte },
-  bouton: { borderRadius: 12, paddingVertical: 14, paddingHorizontal: 16, alignItems: 'center' },
-  texteBouton: { fontSize: 16, fontWeight: '700' },
+  ecran: { padding: 16, gap: 12, paddingBottom: 40, width: '100%', maxWidth: 640, alignSelf: 'center' },
+  carte: {
+    backgroundColor: couleurs.carte,
+    borderRadius: rayons.carte,
+    padding: 18,
+    gap: 10,
+    borderWidth: 1,
+    borderColor: couleurs.bord,
+    ...ombre,
+  },
+  carteSombre: { backgroundColor: couleurs.ardoise, borderColor: couleurs.ardoise },
+  titreCarte: { fontSize: 18, fontFamily: polices.gras, color: couleurs.texte, letterSpacing: -0.2 },
+  bouton: {
+    borderRadius: rayons.bouton,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 8,
+  },
+  texteBouton: { fontSize: 16, fontFamily: polices.gras },
   choix: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  option: { paddingVertical: 8, paddingHorizontal: 12, borderRadius: 20, borderWidth: 1.5, borderColor: couleurs.bord },
-  ligne: { flexDirection: 'row', justifyContent: 'space-between' },
-  texte: { fontSize: 15, color: couleurs.texte, lineHeight: 21 },
-  texteDoux: { fontSize: 14, color: couleurs.texteDoux },
-  gros: { fontSize: 22, fontWeight: '700', color: couleurs.texte },
-  valeur: { fontSize: 15, fontWeight: '700', color: couleurs.texte },
-  valeurJauge: { fontSize: 44, fontWeight: '800', color: couleurs.texte, textAlign: 'center', fontVariant: ['tabular-nums'] },
-  jauge: { height: 28, borderRadius: 14, backgroundColor: couleurs.bord, overflow: 'hidden' },
+  option: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: rayons.pilule, borderWidth: 1.5, borderColor: couleurs.bord },
+  ligne: { flexDirection: 'row', justifyContent: 'space-between', gap: 12 },
+  texte: { fontSize: 15, color: couleurs.texte, lineHeight: 22, fontFamily: polices.normal },
+  texteDoux: { fontSize: 14, color: couleurs.texteDoux, fontFamily: polices.normal },
+  gros: { fontSize: 26, fontFamily: polices.tresGras, color: couleurs.texte, letterSpacing: -0.4 },
+  valeur: { fontSize: 15, fontFamily: polices.demiGras, color: couleurs.texte, flexShrink: 1, textAlign: 'right' },
+  valeurJauge: { fontSize: 52, fontFamily: polices.tresGras, color: couleurs.texte, textAlign: 'center', fontVariant: ['tabular-nums'], letterSpacing: -1 },
+  uniteJauge: { fontSize: 20, fontFamily: polices.demiGras, color: couleurs.texteDoux, letterSpacing: 0 },
+  jauge: { height: 30, borderRadius: rayons.pilule, backgroundColor: couleurs.fond, overflow: 'hidden', borderWidth: 1, borderColor: couleurs.bord },
   zoneCible: { position: 'absolute', top: 0, bottom: 0, backgroundColor: couleurs.vertDoux, borderLeftWidth: 2, borderRightWidth: 2, borderColor: couleurs.vert },
-  barre: { position: 'absolute', left: 0, top: 6, bottom: 6, borderRadius: 8 },
-  section: { fontSize: 13, fontWeight: '700', color: couleurs.texteDoux, textTransform: 'uppercase', letterSpacing: 0.8, marginTop: 8 },
+  barre: { position: 'absolute', left: 4, top: 4, bottom: 4, borderRadius: rayons.pilule },
+  section: { fontSize: 12, fontFamily: polices.gras, color: couleurs.texteDoux, textTransform: 'uppercase', letterSpacing: 1.2, marginTop: 10 },
   chiffreTexte: { fontSize: 18 },
-  chiffre: { fontSize: 28, lineHeight: 34, fontWeight: '800', color: couleurs.texte, fontVariant: ['tabular-nums'] },
+  chiffre: { fontSize: 30, lineHeight: 36, fontFamily: polices.tresGras, color: couleurs.texte, fontVariant: ['tabular-nums'] },
 });

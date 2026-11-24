@@ -1,12 +1,12 @@
 import { router } from 'expo-router';
-import { View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 import { NOMS_NIVEAUX } from '../../core/plans';
 import { dureePlanMin } from '../../core/programme';
 import { useDonnees } from '../../state/donnees';
 import { useEntrainement } from '../../state/entrainement';
 import { BandeauPlanche, NOMS_MAINS } from '../../ui/blocs';
-import { Bouton, Carte, Chiffre, couleurs, Ecran, Ligne, Section, T } from '../../ui/composants';
-import { Courbe } from '../../ui/graphiques';
+import { Bouton, Carte, couleurs, Ecran, Ligne, polices, Section, T } from '../../ui/composants';
+import { AnneauScore, Courbe } from '../../ui/graphiques';
 
 function dateLongue(d: Date) {
   return d.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' });
@@ -26,22 +26,34 @@ export default function Accueil() {
 
   return (
     <Ecran>
-      <T gros>Salut {profil.nom} !</T>
-      <BandeauPlanche />
+      <View style={styles.entete}>
+        <T gros>Salut {profil.nom} !</T>
+        <BandeauPlanche />
+      </View>
 
-      <Section>Mon score de grimpe</Section>
-      <Carte>
-        <View style={{ flexDirection: 'row' }}>
-          <Chiffre valeur={e.score !== null ? `${e.score.toFixed(1)}` : '–'} legende="sur 10" couleur={couleurs.accent} />
-          <Chiffre valeur={NOMS_NIVEAUX[e.niveau]} legende="niveau" />
-          <Chiffre
-            valeur={variation !== null ? `${variation >= 0 ? '+' : ''}${variation.toFixed(1)}` : '–'}
-            legende="depuis le dernier test"
-            couleur={variation !== null && variation < 0 ? couleurs.rouge : couleurs.vert}
-          />
+      <Carte sombre>
+        <Text style={styles.surtitre}>Mon score de grimpe</Text>
+        <View style={styles.hero}>
+          <AnneauScore score={e.score} />
+          <View style={{ flex: 1, gap: 14 }}>
+            <View>
+              <Text style={styles.niveau}>{NOMS_NIVEAUX[e.niveau]}</Text>
+              <Text style={styles.legende}>niveau actuel</Text>
+            </View>
+            <View>
+              <Text style={[styles.variation, { color: variation !== null && variation < 0 ? couleurs.rougeSurArdoise : couleurs.vertSurArdoise }]}>
+                {variation !== null ? `${variation >= 0 ? '▲ +' : '▼ '}${variation.toFixed(1)}` : '–'}
+              </Text>
+              <Text style={styles.legende}>depuis le dernier test</Text>
+            </View>
+          </View>
         </View>
+        <Bouton titre="Faire un test de force" icone="speedometer-outline" onPress={() => router.navigate('/test')} />
+      </Carte>
+
+      <Section>Ma progression</Section>
+      <Carte>
         <Courbe points={e.scores.map((s) => ({ date: s.date, valeur: s.score }))} min={1} max={10} graduations={[1, 4, 7, 10]} />
-        <Bouton titre="Faire un test de force" onPress={() => router.navigate('/test')} />
       </Carte>
 
       <Section>Entraînement du jour</Section>
@@ -64,8 +76,17 @@ export default function Accueil() {
             />
           </>
         )}
-        <Bouton titre="Voir la séance" variante="contour" onPress={() => router.navigate('/seance')} />
+        <Bouton titre="Voir la séance" icone="arrow-forward" variante="contour" onPress={() => router.navigate('/seance')} />
       </Carte>
     </Ecran>
   );
 }
+
+const styles = StyleSheet.create({
+  entete: { gap: 10 },
+  surtitre: { fontSize: 12, fontFamily: polices.gras, color: couleurs.texteSurArdoiseDoux, textTransform: 'uppercase', letterSpacing: 1.2 },
+  hero: { flexDirection: 'row', alignItems: 'center', gap: 20, paddingVertical: 4 },
+  niveau: { fontSize: 24, fontFamily: polices.tresGras, color: couleurs.texteSurArdoise, letterSpacing: -0.3 },
+  variation: { fontSize: 20, fontFamily: polices.gras },
+  legende: { fontSize: 13, fontFamily: polices.normal, color: couleurs.texteSurArdoiseDoux },
+});

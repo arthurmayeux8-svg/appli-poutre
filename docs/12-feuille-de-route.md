@@ -4,6 +4,7 @@
 
 - [x] Appli : tests de force (gauche, droite, deux mains), score 1-10, plans, séances guidées, adaptation, profil, graphiques
 - [x] Simulateur de planche et données de démo
+- [x] Charte graphique, logo, icônes et animations (voir 15-charte-graphique.md)
 - [x] Programmes Arduino (UNO + HM-10, Nano 33 BLE / UNO R4)
 - [x] Protocole Bluetooth documenté, configuration envoyée par la planche
 - [x] Étalonnage et identification des capteurs dans l'appli

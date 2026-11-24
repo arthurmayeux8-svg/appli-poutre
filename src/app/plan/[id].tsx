@@ -6,6 +6,8 @@ import { useConnexion } from '../../state/connexion';
 import { nouvelId, useDonnees } from '../../state/donnees';
 import { useEntrainement } from '../../state/entrainement';
 import { BandeauPlanche, CarteExercice } from '../../ui/blocs';
+import { Text } from 'react-native';
+import { Rebond } from '../../ui/animations';
 import { Bouton, Carte, Choix, Ecran, JaugeForce, Ligne, T } from '../../ui/composants';
 
 type Phase = 'preparation' | 'suspension' | 'repos' | 'repos-serie';
@@ -138,7 +140,9 @@ export default function EcranPlan() {
     return (
       <Ecran>
         <Stack.Screen options={{ title: plan.nom }} />
-        <Carte titre="Séance terminée">
+        <Rebond>
+          <Carte titre="Séance terminée">
+          <Text style={{ fontSize: 44, textAlign: 'center' }}>🎉</Text>
           <Ligne libelle="Suspensions tenues" valeur={`${reussies.current} / ${total.current}`} />
           <T>Comment était la séance ?</T>
           <Choix
@@ -151,7 +155,8 @@ export default function EcranPlan() {
             ]}
           />
           <T doux>Votre réponse adapte la prochaine séance : plus de charge si c'était trop facile, moins si c'était trop dur.</T>
-        </Carte>
+          </Carte>
+        </Rebond>
         <Bouton
           titre="Enregistrer"
           onPress={() => {

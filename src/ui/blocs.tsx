@@ -3,7 +3,8 @@ import { StyleSheet, Text, View } from 'react-native';
 import { CibleExercice, choisirPrise, Exercice, NOMS_PREHENSION, PLACEMENT_DOIGTS } from '../core/plans';
 import { Prise } from '../core/types';
 import { useConnexion } from '../state/connexion';
-import { Bouton, Carte, couleurs, Ligne, T } from './composants';
+import { PointPulsant } from './animations';
+import { Bouton, Carte, couleurs, Ligne, polices, T } from './composants';
 
 export const NOMS_MAINS = { deux: 'Deux mains', gauche: 'Main gauche', droite: 'Main droite' } as const;
 
@@ -37,7 +38,7 @@ export function BandeauPlanche() {
   if (c.etat === 'connecte') {
     return (
       <View style={styles.bandeau}>
-        <View style={[styles.point, { backgroundColor: couleurs.vert }]} />
+        <PointPulsant couleur={couleurs.vert} />
         <Text style={styles.texte}>
           {c.simulateur ? 'Simulateur connecté' : `Planche connectée : ${c.nomPlanche}`}
         </Text>
@@ -52,10 +53,10 @@ export function BandeauPlanche() {
       </View>
       <View style={{ flexDirection: 'row', gap: 8 }}>
         <View style={{ flex: 1 }}>
-          <Bouton titre="Simulateur" variante="contour" onPress={c.connecterSimulateur} />
+          <Bouton titre="Simulateur" icone="game-controller-outline" variante="contour" onPress={c.connecterSimulateur} />
         </View>
         <View style={{ flex: 1 }}>
-          <Bouton titre="Paramètres" variante="contour" onPress={() => router.push('/parametres')} />
+          <Bouton titre="Paramètres" icone="settings-outline" variante="contour" onPress={() => router.push('/parametres')} />
         </View>
       </View>
     </Carte>
@@ -63,8 +64,8 @@ export function BandeauPlanche() {
 }
 
 const styles = StyleSheet.create({
-  bandeau: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', backgroundColor: couleurs.carte, borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12, borderWidth: 1, borderColor: couleurs.bord },
+  bandeau: { flexDirection: 'row', alignItems: 'center', gap: 8, alignSelf: 'flex-start', backgroundColor: couleurs.vertDoux, borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12, borderWidth: 0 },
   bandeauInterne: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   point: { width: 8, height: 8, borderRadius: 4 },
-  texte: { fontSize: 13, color: couleurs.texte, fontWeight: '600' },
+  texte: { fontSize: 13, color: couleurs.texte, fontFamily: polices.demiGras },
 });

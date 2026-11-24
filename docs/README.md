@@ -19,3 +19,4 @@ Tout ce qui a été décidé pendant le projet, en fichiers courts. Commencez pa
 | [12-feuille-de-route.md](12-feuille-de-route.md) | Ce qui est fait, ce qui reste |
 | [13-glossaire.md](13-glossaire.md) | Les mots techniques expliqués |
 | [14-travailler-avec-claude.md](14-travailler-avec-claude.md) | Comment continuer le projet avec Claude |
+| [15-charte-graphique.md](15-charte-graphique.md) | Logo, couleurs, police, animations |
