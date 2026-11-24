@@ -4,6 +4,7 @@ Les plus récentes en haut.
 
 | Date | Décision | Pourquoi |
 |---|---|---|
+| 24/11/2026 | Charte graphique « Craie & Ardoise » : fond craie, ardoise, orange magnésie, police Outfit, logo poutre + courbe | Demande d'Arthur : un visuel plus soigné, avec logo et animations |
 | 23/11/2026 | La configuration (côtés des capteurs) et l'étalonnage sont faits **par l'équipe avant de donner la planche**, et écrits dans le programme Arduino | L'utilisateur final n'a rien à régler |
 | 23/11/2026 | L'Arduino envoie toutes les 2 s une ligne `C,G,D,...` avec le côté de chaque capteur | L'appli se règle toute seule |
 | 23/11/2026 | Pas d'appli payante sur iPhone : on utilise **le site web**. Sur iPhone, le Bluetooth passe par le navigateur gratuit **Bluefy** | Le compte Apple coûte 99 € par an, hors budget |

@@ -5,7 +5,7 @@ import { dureePlanMin } from '../../core/programme';
 import { useDonnees } from '../../state/donnees';
 import { useEntrainement } from '../../state/entrainement';
 import { BandeauPlanche, CarteExercice } from '../../ui/blocs';
-import { Bouton, Carte, couleurs, Ecran, Section, T } from '../../ui/composants';
+import { Bouton, Carte, couleurs, Ecran, polices, Section, T } from '../../ui/composants';
 
 function dateCourte(d: Date | string) {
   return new Date(d).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });
@@ -51,7 +51,7 @@ export default function OngletSeance() {
       {plan.exercices.map((ex, i) => (
         <CarteExercice key={ex.nom} ex={ex} cible={cibles[i]} prises={reglages.prises} />
       ))}
-      <Bouton titre="Démarrer la séance" onPress={() => router.push(`/plan/${plan.id}?demarrer=1`)} />
+      <Bouton titre="Démarrer la séance" icone="play" onPress={() => router.push(`/plan/${plan.id}?demarrer=1`)} />
 
       <Section>Séances à venir</Section>
       <Carte>
@@ -86,8 +86,8 @@ export default function OngletSeance() {
 }
 
 const styles = StyleSheet.create({
-  ligne: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: couleurs.bord, gap: 8 },
-  date: { width: 96, fontSize: 13, color: couleurs.texteDoux },
-  nom: { flex: 1, fontSize: 15, fontWeight: '600', color: couleurs.texte },
-  droite: { fontSize: 13, color: couleurs.texteDoux },
+  ligne: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: couleurs.bord, gap: 8 },
+  date: { width: 96, fontSize: 13, color: couleurs.texteDoux, fontFamily: polices.normal },
+  nom: { flex: 1, fontSize: 15, fontFamily: polices.demiGras, color: couleurs.texte },
+  droite: { fontSize: 13, color: couleurs.texteDoux, fontFamily: polices.normal },
 });

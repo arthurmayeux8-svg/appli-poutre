@@ -1,5 +1,6 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Pressable, View } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, View } from 'react-native';
 import { analyserSuspension, AnalyseSuspension } from '../../core/analyse';
 import { dissymetriePct } from '../../core/forces';
 import { NOMS_NIVEAUX } from '../../core/plans';
@@ -9,7 +10,8 @@ import { useConnexion } from '../../state/connexion';
 import { nouvelId, useDonnees } from '../../state/donnees';
 import { useEntrainement } from '../../state/entrainement';
 import { BandeauPlanche, NOMS_MAINS } from '../../ui/blocs';
-import { Bouton, Carte, Chiffre, Choix, couleurs, Ecran, JaugeForce, Ligne, Section, T } from '../../ui/composants';
+import { Rebond } from '../../ui/animations';
+import { Bouton, Carte, Chiffre, Choix, couleurs, Ecran, JaugeForce, Ligne, polices, Section, T } from '../../ui/composants';
 import { BarresGaucheDroite } from '../../ui/graphiques';
 
 type Etape = 'choix' | 'preparation' | 'mesure' | 'resultat';
@@ -159,11 +161,16 @@ export default function OngletTest() {
 
     return (
       <Ecran>
+        <Rebond>
         <Carte titre="Résultat">
           {!valide ? (
             <T>Aucune suspension détectée. Vérifiez la connexion et le seuil dans les paramètres.</T>
           ) : (
             <>
+              <Text style={styles.resultat}>
+                {type === 'force-max' ? r.forceMaxKg.toFixed(1) : r.dureeS.toFixed(1)}
+                <Text style={styles.unite}>{type === 'force-max' ? ' kg' : ' s'}</Text>
+              </Text>
               <Ligne libelle="Force max" valeur={`${r.forceMaxKg.toFixed(1)} kg (${pctPoids.toFixed(0)} % du poids)`} />
               <Ligne libelle="Force moyenne" valeur={`${r.forceMoyenneKg.toFixed(1)} kg`} />
               <Ligne libelle="Temps suspendu" valeur={`${r.dureeS.toFixed(1)} s`} />
@@ -183,7 +190,8 @@ export default function OngletTest() {
             </>
           )}
         </Carte>
-        {valide ? <Bouton titre="Enregistrer" onPress={enregistrer} /> : null}
+        </Rebond>
+        {valide ? <Bouton titre="Enregistrer" icone="checkmark" onPress={enregistrer} /> : null}
         <Bouton titre="Recommencer" variante="contour" onPress={() => setEtape('choix')} />
       </Ecran>
     );
@@ -197,9 +205,10 @@ export default function OngletTest() {
     <Ecran>
       <BandeauPlanche />
       {message ? (
-        <Carte>
-          <T>{message}</T>
-        </Carte>
+        <Rebond key={message} style={styles.message}>
+          <Ionicons name="checkmark-circle" size={22} color={couleurs.vert} />
+          <Text style={styles.texteMessage}>{message}</Text>
+        </Rebond>
       ) : null}
 
       <Carte>
@@ -302,3 +311,10 @@ function construireGroupesGD(tests: ResultatTest[]) {
   }
   return paires.length > 0 ? paires : deuxMains;
 }
+
+const styles = StyleSheet.create({
+  resultat: { fontSize: 56, fontFamily: polices.tresGras, color: couleurs.accent, textAlign: 'center', letterSpacing: -1.5 },
+  unite: { fontSize: 22, fontFamily: polices.demiGras, color: couleurs.texteDoux, letterSpacing: 0 },
+  message: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: couleurs.vertDoux, borderRadius: 16, padding: 14 },
+  texteMessage: { flex: 1, fontSize: 15, fontFamily: polices.demiGras, color: couleurs.texte },
+});

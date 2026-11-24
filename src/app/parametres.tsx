@@ -8,7 +8,7 @@ import { peutSeparerLesMains } from '../core/forces';
 import { CapteurConfig, CoteCapteur } from '../core/types';
 import { useConnexion } from '../state/connexion';
 import { nouvelId, useDonnees } from '../state/donnees';
-import { Bouton, Carte, Chiffre, Choix, couleurs, Ecran, JaugeForce, Section, T } from '../ui/composants';
+import { Bouton, Carte, Chiffre, Choix, couleurs, Ecran, JaugeForce, polices, Section, T } from '../ui/composants';
 
 /** Paramètres : profil, connexion à la planche, réglages de la planche, données. */
 export default function Parametres() {
@@ -152,11 +152,13 @@ function BlocConnexion() {
         )}
 
         <View style={[styles.ligne, { justifyContent: 'space-between' }]}>
-          <Text style={{ flex: 1, color: couleurs.texte }}>Connecter le simulateur au lancement</Text>
+          <Text style={{ flex: 1, color: couleurs.texte, fontFamily: polices.normal }}>Connecter le simulateur au lancement</Text>
           <Switch
             value={reglages.simulateurAuDemarrage}
             onValueChange={(v) => majReglages({ ...reglages, simulateurAuDemarrage: v })}
             trackColor={{ true: couleurs.accent, false: couleurs.bord }}
+            thumbColor={couleurs.carte}
+            {...({ activeThumbColor: couleurs.carte } as object)}
           />
         </View>
       </Carte>
@@ -273,7 +275,7 @@ function BlocReglages() {
               disabled={reglages.prises.length <= 1}
               onPress={() => majReglages({ ...reglages, prises: reglages.prises.filter((x) => x.id !== p.id) })}
             >
-              <Text style={{ color: couleurs.rouge, fontWeight: '600' }}>Retirer</Text>
+              <Text style={{ color: couleurs.rouge, fontFamily: polices.demiGras }}>Retirer</Text>
             </Pressable>
           </View>
         ))}
@@ -393,7 +395,7 @@ function CarteEtalonnage() {
       />
       {resultat ? <T>{resultat}</T> : null}
       <Pressable onPress={() => majReglages({ ...reglages, etalonnage: ETALONNAGE_NEUTRE })}>
-        <Text style={{ color: couleurs.texteDoux, textDecorationLine: 'underline' }}>Effacer l'étalonnage de l'appli</Text>
+        <Text style={{ color: couleurs.texteDoux, fontFamily: polices.normal, textDecorationLine: 'underline' }}>Effacer l'étalonnage de l'appli</Text>
       </Pressable>
     </Carte>
   );
@@ -451,14 +453,14 @@ function BlocDonnees() {
 }
 
 const styles = StyleSheet.create({
-  champ: { borderWidth: 1, borderColor: couleurs.bord, borderRadius: 10, padding: 10, fontSize: 16, color: couleurs.texte, backgroundColor: '#fff' },
+  champ: { borderWidth: 1, borderColor: couleurs.bord, borderRadius: 10, padding: 12, fontSize: 16, color: couleurs.texte, backgroundColor: couleurs.carte, fontFamily: polices.normal },
   ligne: { flexDirection: 'row', alignItems: 'center', gap: 8, flexWrap: 'wrap' },
   point: { width: 10, height: 10, borderRadius: 5 },
-  titre: { fontSize: 17, fontWeight: '700', color: couleurs.texte },
+  titre: { fontSize: 17, fontFamily: polices.gras, color: couleurs.texte },
   capteur: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap', padding: 8, borderRadius: 10, borderWidth: 1.5, borderColor: 'transparent' },
   capteurActif: { borderColor: couleurs.accent, backgroundColor: couleurs.accentDoux },
-  titreCapteur: { fontSize: 15, fontWeight: '600', color: couleurs.texte },
-  valeurCapteur: { fontSize: 13, color: couleurs.texteDoux, fontVariant: ['tabular-nums'] },
+  titreCapteur: { fontSize: 15, fontFamily: polices.demiGras, color: couleurs.texte },
+  valeurCapteur: { fontSize: 13, fontFamily: polices.normal, color: couleurs.texteDoux, fontVariant: ['tabular-nums'] },
   maintenir: { borderWidth: 2, borderColor: couleurs.accent, borderRadius: 14, paddingVertical: 22, alignItems: 'center' },
-  texteMaintenir: { fontSize: 16, fontWeight: '700', color: couleurs.accent },
+  texteMaintenir: { fontSize: 16, fontFamily: polices.gras, color: couleurs.accent },
 });
