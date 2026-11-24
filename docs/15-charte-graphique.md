@@ -8,16 +8,17 @@ Tout est réglé dans un seul fichier : `src/ui/theme.ts`. Pour changer une coul
 
 ![Logo Poutre](../public/logo.svg)
 
-- Une **poutre orange** avec ses trois réglettes : c'est l'objet du projet.
-- En dessous, une **courbe à la craie qui monte** : la progression.
-- Sur un carré **ardoise** aux coins arrondis.
+- Un **P** (comme Poutre) : une barre couleur craie et une **boucle orange**.
+- La boucle rappelle l'**anneau du score** de l'accueil, qui se remplit quand on progresse.
+- Sur un carré **ardoise** aux coins arrondis. Reste lisible même en toute petite icône.
+- Choisi le 24/11 parmi trois pistes (le sommet, les doigts, le P jauge).
 
 Fichiers :
 
 | Fichier | Sert à |
 |---|---|
 | `public/logo.svg` | Le dessin d'origine (vectoriel), aussi l'icône de l'onglet du navigateur |
-| `src/ui/logo.tsx` | Le même dessin dans l'appli (en-tête de l'accueil, écran de chargement) |
+| `src/ui/logo.tsx` | Le même dessin dans l'appli (en-tête de l'accueil, écran d'ouverture) |
 | `public/icone-192.png`, `public/icone-512.png` | Icônes de l'écran d'accueil (Android) |
 | `public/apple-touch-icon.png` | Icône de l'écran d'accueil (iPhone) |
 | `assets/icon.png`, `assets/favicon.png`, `assets/splash-icon.png` | Icônes de l'appli installée |
@@ -64,6 +65,16 @@ Règles :
 - Boutons : coins arrondis **14**, icône à gauche du texte.
 - Choix (prise, main…) : **pilules** ; l'option choisie est en ardoise.
 - Marges : 16 sur les côtés, 12 entre les cartes. Sur grand écran, le contenu ne dépasse pas 640 de large.
+
+## L'écran d'ouverture
+
+À chaque lancement (`src/ui/ouverture.tsx`, environ 2,5 s) :
+
+1. Sur fond ardoise, la barre du P monte, puis la boucle orange se dessine comme l'anneau du score.
+2. Le nom **Poutre** apparaît, puis la phrase « Mesure ta force. Entraîne tes doigts. »
+3. Tout s'efface en grossissant légèrement, et on arrive sur l'accueil.
+
+Un appui n'importe où passe directement à l'appli.
 
 ## Les animations
 

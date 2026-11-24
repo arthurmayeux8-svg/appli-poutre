@@ -4,6 +4,7 @@ Les plus récentes en haut.
 
 | Date | Décision | Pourquoi |
 |---|---|---|
+| 24/11/2026 | Nouveau logo « P jauge » et écran d'ouverture animé | Le premier logo ne plaisait pas à Arthur |
 | 24/11/2026 | Charte graphique « Craie & Ardoise » : fond craie, ardoise, orange magnésie, police Outfit, logo poutre + courbe | Demande d'Arthur : un visuel plus soigné, avec logo et animations |
 | 23/11/2026 | La configuration (côtés des capteurs) et l'étalonnage sont faits **par l'équipe avant de donner la planche**, et écrits dans le programme Arduino | L'utilisateur final n'a rien à régler |
 | 23/11/2026 | L'Arduino envoie toutes les 2 s une ligne `C,G,D,...` avec le côté de chaque capteur | L'appli se règle toute seule |
